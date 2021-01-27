@@ -11,3 +11,7 @@ java {
 		languageVersion.set(JavaLanguageVersion.of(15))
 	}
 }
+
+dependencies {
+	implementation(group = "net.snowflake", name = "snowflake-jdbc", version = "3.12.17")
+}
