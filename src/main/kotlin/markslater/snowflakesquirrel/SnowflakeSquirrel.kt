@@ -56,9 +56,9 @@ fun main(args: Array<String>) {
                 println("================================")
 
                 val resultSetMetaData = resultSet.metaData
-                println("Number of columns=" + resultSetMetaData.columnCount)
+                println("Number of columns=${resultSetMetaData.columnCount}")
                 for (columnIndex in 1..resultSetMetaData.columnCount) {
-                    println("Column " + columnIndex + ": type=" + resultSetMetaData.getColumnTypeName(columnIndex))
+                    println("Column $columnIndex: type=${resultSetMetaData.getColumnTypeName(columnIndex)}")
                 }
 
                 // fetch data
