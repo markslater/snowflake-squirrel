@@ -16,7 +16,7 @@ import org.junit.jupiter.api.Test
 
 internal class SnowflakeJdbcSchemeTest {
     @Test
-    fun `Can make sample Snowflake connection string`() {
+    fun `Can make first sample Snowflake connection string`() {
         val urin = SnowflakeJdbcScheme.urin(
             authority(registeredName("xy12345.snowflakecomputing.com")),
             path(Segment.empty()),
@@ -32,6 +32,28 @@ internal class SnowflakeJdbcSchemeTest {
                 has(
                     Urin<Iterable<Iterable<String>>, HttpQuery, Fragment<String>>::asString,
                     equalTo("jdbc:snowflake://xy12345.snowflakecomputing.com/?user=peter&warehouse=mywh&db=mydb&schema=public")
+                )
+            )
+        )
+    }
+
+    @Test
+    fun `Can make second sample Snowflake connection string`() {
+        val urin = SnowflakeJdbcScheme.urin(
+            authority(registeredName("xy12345.eu-central-1.snowflakecomputing.com")),
+            path(Segment.empty()),
+            queryParameters(
+                queryParameter("user", "peter"),
+                queryParameter("warehouse", "mywh"),
+                queryParameter("db", "mydb"),
+                queryParameter("schema", "public")
+            )
+        )
+        assertThat(
+            urin, isA(
+                has(
+                    Urin<Iterable<Iterable<String>>, HttpQuery, Fragment<String>>::asString,
+                    equalTo("jdbc:snowflake://xy12345.eu-central-1.snowflakecomputing.com/?user=peter&warehouse=mywh&db=mydb&schema=public")
                 )
             )
         )
