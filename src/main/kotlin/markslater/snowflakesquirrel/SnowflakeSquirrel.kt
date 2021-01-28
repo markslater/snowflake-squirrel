@@ -5,13 +5,11 @@ import net.sourceforge.urin.Authority.authority
 import net.sourceforge.urin.Host.registeredName
 import java.io.File
 import java.nio.charset.StandardCharsets.UTF_8
-import java.sql.Connection
 import java.sql.DriverManager
 import java.util.*
 
 fun main(args: Array<String>) {
     val propertiesFileName = args[0]
-    println(propertiesFileName)
     val properties = Properties().apply {
         File(propertiesFileName).bufferedReader(UTF_8).use {
             load(it)
@@ -23,7 +21,16 @@ fun main(args: Array<String>) {
 
     // get connection
     println("Create JDBC connection")
-    getConnection(account, user, password).use { connection ->
+    DriverManager.getConnection(
+        SnowflakeJdbcScheme.urin(authority(registeredName(account))).asString(),
+        Properties().apply {
+            put("user", user)
+            put("password", password)
+            put("warehouse", "MYWAREHOUSE")
+            put("db", "DEMO_DB")
+            put("schema", "PUBLIC")
+        }
+    ).use { connection ->
         println("Done creating JDBC connection\n")
         connection
             .unwrap(SnowflakeConnection::class.java)
@@ -47,9 +54,11 @@ fun main(args: Array<String>) {
 
             // insert a row
             println("Load data")
-            statement.executeUpdate("copy into raw_source\n" +
-                    "  from @~/testUploadStream\n" +
-                    "  file_format = (type = json, strip_outer_array = true);")
+            statement.executeUpdate(
+                "copy into raw_source\n" +
+                        "  from @~/testUploadStream\n" +
+                        "  file_format = (type = json, strip_outer_array = true);"
+            )
             println("Done loading data'\n")
 
             // query the data
@@ -80,15 +89,3 @@ fun main(args: Array<String>) {
 
 }
 
-private fun getConnection(account: String, user: String, password: String): Connection {
-    return DriverManager.getConnection(
-        SnowflakeJdbcScheme.urin(authority(registeredName(account))).asString(),
-        Properties().apply {
-            put("user", user)
-            put("password", password)
-            put("warehouse", "MYWAREHOUSE")
-            put("db", "DEMO_DB")
-            put("schema", "PUBLIC")
-        }
-    )
-}
