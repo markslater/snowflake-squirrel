@@ -48,7 +48,7 @@ fun main(args: Array<String>) {
     println("Load data")
     statement.executeUpdate("copy into raw_source\n" +
             "  from @~/testUploadStream\n" +
-            "  file_format = (type = json);")
+            "  file_format = (type = json, strip_outer_array = true);")
     println("Done loading data'\n")
 
     connection.close()
