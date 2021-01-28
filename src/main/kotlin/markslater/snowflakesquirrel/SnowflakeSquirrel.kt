@@ -7,6 +7,7 @@ import java.io.File
 import java.nio.charset.StandardCharsets.UTF_8
 import java.sql.Connection
 import java.sql.DriverManager
+import java.sql.ResultSet
 import java.sql.Statement
 import java.util.*
 
@@ -51,6 +52,30 @@ fun main(args: Array<String>) {
             "  file_format = (type = json, strip_outer_array = true);")
     println("Done loading data'\n")
 
+    // query the data
+    println("Query demo")
+    val resultSet: ResultSet = statement.executeQuery("select src:foo::string from raw_source")
+    println("Metadata:")
+    println("================================")
+
+    // fetch metadata
+    val resultSetMetaData = resultSet.metaData
+    println("Number of columns=" + resultSetMetaData.columnCount)
+    for (colIdx in 0 until resultSetMetaData.columnCount) {
+        println(
+            "Column " + colIdx + ": type=" + resultSetMetaData.getColumnTypeName(colIdx + 1)
+        )
+    }
+
+    // fetch data
+    println("\nData:")
+    println("================================")
+    val rowIdx = 0
+    while (resultSet.next()) {
+        println("row " + rowIdx + ", column 0: " + resultSet.getString(1))
+    }
+    resultSet.close()
+    statement.close()
     connection.close()
 }
 
