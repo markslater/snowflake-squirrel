@@ -7,6 +7,7 @@ import java.io.File
 import java.nio.charset.StandardCharsets.UTF_8
 import java.sql.Connection
 import java.sql.DriverManager
+import java.sql.Statement
 import java.util.*
 
 
@@ -31,6 +32,24 @@ fun main(args: Array<String>) {
         "~", "testUploadStream",
         """[{"foo":"bar"}, {"foo":"baz"}]""".byteInputStream(UTF_8), "sample.json", true
     )
+
+    // create statement
+    println("Create JDBC statement")
+    val statement: Statement = connection.createStatement()
+    println("Done creating JDBC statement\n")
+
+    // create a table
+    println("Create demo table")
+    statement.executeUpdate("create or replace table raw_source (\n" +
+            "  src variant);")
+    println("Done creating demo table\n")
+
+    // insert a row
+    println("Load data")
+    statement.executeUpdate("copy into raw_source\n" +
+            "  from @~/testUploadStream\n" +
+            "  file_format = (type = json);")
+    println("Done loading data'\n")
 
     connection.close()
 }
