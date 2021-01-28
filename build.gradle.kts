@@ -18,6 +18,10 @@ dependencies {
 	implementation(group = "net.snowflake", name = "snowflake-jdbc", version = "3.12.17")
 	implementation(group = "net.sourceforge.urin", name = "urin", version = "3.12")
 
+	runtimeOnly(group = "javax.xml.bind", name = "jaxb-api", version = "2.3.1") {
+		because("Snowflake doesn't declare its dependencies properly, as per https://github.com/aws/aws-sdk-java/issues/2036")
+	}
+
 	testImplementation(group = "org.junit.jupiter", name= "junit-jupiter", version = "5.7.0")
 	testImplementation(group = "com.natpryce", name= "hamkrest", version = "1.8.0.1")
 
