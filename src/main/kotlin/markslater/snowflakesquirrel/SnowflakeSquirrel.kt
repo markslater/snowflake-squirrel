@@ -4,6 +4,10 @@ import net.snowflake.client.jdbc.SnowflakeConnection
 import net.sourceforge.urin.Authority.authority
 import net.sourceforge.urin.Host.registeredName
 import java.io.File
+import java.net.URI
+import java.net.http.HttpClient
+import java.net.http.HttpRequest
+import java.net.http.HttpResponse
 import java.nio.charset.StandardCharsets.UTF_8
 import java.sql.DriverManager
 import java.util.*
@@ -29,12 +33,17 @@ fun main(args: Array<String>) {
             put("schema", "PUBLIC")
         }
     ).use { connection ->
+        val httpResponse = HttpClient.newHttpClient().send(
+            HttpRequest.newBuilder(URI("https://data.cityofnewyork.us/resource/vfnx-vebw.json")).GET().build(),
+            HttpResponse.BodyHandlers.ofInputStream()
+        )
+
         connection
             .unwrap(SnowflakeConnection::class.java)
             .uploadStream(
                 "~",
                 "testUploadStream",
-                """[{"foo":"bar"}, {"foo":"baz"}]""".byteInputStream(UTF_8),
+                httpResponse.body(),
                 "sample.json",
                 true
             )
@@ -42,26 +51,27 @@ fun main(args: Array<String>) {
         connection.createStatement().use { statement ->
             statement.executeUpdate("create or replace table raw_source (src variant);")
             statement.executeUpdate("copy into raw_source from @~/testUploadStream/sample.json file_format = (type = json, strip_outer_array = true);")
-            statement.executeQuery("select src:foo::string from raw_source").use { resultSet ->
+            statement.executeQuery("select src:primary_fur_color::string, count(*) from raw_source group by src:primary_fur_color::string").use { resultSet ->
                 println("Metadata:")
                 println("================================")
 
                 val resultSetMetaData = resultSet.metaData
                 println("Number of columns=" + resultSetMetaData.columnCount)
-                for (colIdx in 0 until resultSetMetaData.columnCount) {
-                    println("Column " + colIdx + ": type=" + resultSetMetaData.getColumnTypeName(colIdx + 1))
+                for (columnIndex in 1..resultSetMetaData.columnCount) {
+                    println("Column " + columnIndex + ": type=" + resultSetMetaData.getColumnTypeName(columnIndex))
                 }
 
                 // fetch data
-                println("\nData:")
+                println()
+                println("Data:")
                 println("================================")
-                val rowIdx = 0
                 while (resultSet.next()) {
-                    println("row " + rowIdx + ", column 0: " + resultSet.getString(1))
+                    println((1..resultSetMetaData.columnCount).joinToString(", ") { columnIndex ->
+                        resultSet.getString(columnIndex) ?: "null"
+                    })
                 }
             }
         }
     }
 
 }
-
