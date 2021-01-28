@@ -41,7 +41,7 @@ fun main(args: Array<String>) {
 
         connection.createStatement().use { statement ->
             statement.executeUpdate("create or replace table raw_source (src variant);")
-            statement.executeUpdate("copy into raw_source from @~/testUploadStream file_format = (type = json, strip_outer_array = true);")
+            statement.executeUpdate("copy into raw_source from @~/testUploadStream/sample.json file_format = (type = json, strip_outer_array = true);")
             statement.executeQuery("select src:foo::string from raw_source").use { resultSet ->
                 println("Metadata:")
                 println("================================")
