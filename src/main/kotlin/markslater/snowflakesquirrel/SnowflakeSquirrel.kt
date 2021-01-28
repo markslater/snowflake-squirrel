@@ -1,5 +1,7 @@
 package markslater.snowflakesquirrel
 
+import net.sourceforge.urin.Authority.authority
+import net.sourceforge.urin.Host.registeredName
 import java.sql.*
 import java.util.*
 
@@ -51,27 +53,15 @@ fun main(args: Array<String>) {
     connection.close()
 }
 
-@Throws(SQLException::class)
 private fun getConnection(): Connection {
-
-    // build connection properties
-    val properties = Properties()
-    properties.put("user", "") // replace "" with your user name
-    properties.put("password", "") // replace "" with your password
-    properties.put("warehouse", "") // replace "" with target warehouse name
-    properties.put("db", "") // replace "" with target database name
-    properties.put("schema", "") // replace "" with target schema name
-    // properties.put("tracing", "all"); // optional tracing property
-
-    // Replace <account> with your account, as provided by Snowflake.
-    // Replace <region_id> with the name of the region where your account is located.
-    // If your platform is AWS and your region ID is US West, you can omit the region ID segment.
-    // Replace <platform> with your platform, for example "azure".
-    // If your platform is AWS, you may omit the platform.
-    // Note that if you omit the region ID or the platform, you should also omit the
-    // corresponding "."  E.g. if your platform is AWS and your region is US West, then your
-    // connectStr will look similar to:
-    // "jdbc:snowflake://xy12345.snowflakecomputing.com";
-    val connectStr = "jdbc:snowflake://<account>.<region_id>.<platform>.snowflakecomputing.com"
-    return DriverManager.getConnection(connectStr, properties)
+    return DriverManager.getConnection(
+        SnowflakeJdbcScheme.urin(authority(registeredName("xy12345.eu-central-1.snowflakecomputing.com"))).asString(),
+        Properties().apply {
+            put("user", "") // replace "" with your user name
+            put("password", "") // replace "" with your password
+            put("warehouse", "") // replace "" with target warehouse name
+            put("db", "") // replace "" with target database name
+            put("schema", "") // replace "" with target schema name
+        }
+    )
 }
