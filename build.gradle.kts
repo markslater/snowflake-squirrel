@@ -14,4 +14,5 @@ java {
 
 dependencies {
 	implementation(group = "net.snowflake", name = "snowflake-jdbc", version = "3.12.17")
+	implementation(group = "net.sourceforge.urin", name = "urin", version = "3.12")
 }
