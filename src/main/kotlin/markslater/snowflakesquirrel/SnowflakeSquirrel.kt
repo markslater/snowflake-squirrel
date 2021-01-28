@@ -19,8 +19,6 @@ fun main(args: Array<String>) {
     val user = properties.getProperty("user") ?: error("Missing property \"user\"")
     val password = properties.getProperty("password") ?: error("Missing property \"password\"")
 
-    // get connection
-    println("Create JDBC connection")
     DriverManager.getConnection(
         SnowflakeJdbcScheme.urin(authority(registeredName(account))).asString(),
         Properties().apply {
@@ -31,7 +29,6 @@ fun main(args: Array<String>) {
             put("schema", "PUBLIC")
         }
     ).use { connection ->
-        println("Done creating JDBC connection\n")
         connection
             .unwrap(SnowflakeConnection::class.java)
             .uploadStream(
@@ -42,38 +39,17 @@ fun main(args: Array<String>) {
                 true
             )
 
-        // create statement
-        println("Create JDBC statement")
         connection.createStatement().use { statement ->
-            println("Done creating JDBC statement\n")
-
-            // create a table
-            println("Create demo table")
             statement.executeUpdate("create or replace table raw_source (src variant);")
-            println("Done creating demo table\n")
-
-            // insert a row
-            println("Load data")
-            statement.executeUpdate(
-                "copy into raw_source\n" +
-                        "  from @~/testUploadStream\n" +
-                        "  file_format = (type = json, strip_outer_array = true);"
-            )
-            println("Done loading data'\n")
-
-            // query the data
-            println("Query demo")
+            statement.executeUpdate("copy into raw_source from @~/testUploadStream file_format = (type = json, strip_outer_array = true);")
             statement.executeQuery("select src:foo::string from raw_source").use { resultSet ->
                 println("Metadata:")
                 println("================================")
 
-                // fetch metadata
                 val resultSetMetaData = resultSet.metaData
                 println("Number of columns=" + resultSetMetaData.columnCount)
                 for (colIdx in 0 until resultSetMetaData.columnCount) {
-                    println(
-                        "Column " + colIdx + ": type=" + resultSetMetaData.getColumnTypeName(colIdx + 1)
-                    )
+                    println("Column " + colIdx + ": type=" + resultSetMetaData.getColumnTypeName(colIdx + 1))
                 }
 
                 // fetch data
