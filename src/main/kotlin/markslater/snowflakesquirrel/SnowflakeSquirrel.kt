@@ -7,10 +7,7 @@ import java.io.File
 import java.nio.charset.StandardCharsets.UTF_8
 import java.sql.Connection
 import java.sql.DriverManager
-import java.sql.ResultSet
-import java.sql.Statement
 import java.util.*
-
 
 fun main(args: Array<String>) {
     val propertiesFileName = args[0]
@@ -26,57 +23,61 @@ fun main(args: Array<String>) {
 
     // get connection
     println("Create JDBC connection")
-    val connection: Connection = getConnection(account, user, password)
-    println("Done creating JDBC connection\n")
+    getConnection(account, user, password).use { connection ->
+        println("Done creating JDBC connection\n")
+        connection
+            .unwrap(SnowflakeConnection::class.java)
+            .uploadStream(
+                "~",
+                "testUploadStream",
+                """[{"foo":"bar"}, {"foo":"baz"}]""".byteInputStream(UTF_8),
+                "sample.json",
+                true
+            )
 
-    connection.unwrap(SnowflakeConnection::class.java).uploadStream(
-        "~", "testUploadStream",
-        """[{"foo":"bar"}, {"foo":"baz"}]""".byteInputStream(UTF_8), "sample.json", true
-    )
+        // create statement
+        println("Create JDBC statement")
+        connection.createStatement().use { statement ->
+            println("Done creating JDBC statement\n")
 
-    // create statement
-    println("Create JDBC statement")
-    val statement: Statement = connection.createStatement()
-    println("Done creating JDBC statement\n")
+            // create a table
+            println("Create demo table")
+            statement.executeUpdate("create or replace table raw_source (src variant);")
+            println("Done creating demo table\n")
 
-    // create a table
-    println("Create demo table")
-    statement.executeUpdate("create or replace table raw_source (\n" +
-            "  src variant);")
-    println("Done creating demo table\n")
+            // insert a row
+            println("Load data")
+            statement.executeUpdate("copy into raw_source\n" +
+                    "  from @~/testUploadStream\n" +
+                    "  file_format = (type = json, strip_outer_array = true);")
+            println("Done loading data'\n")
 
-    // insert a row
-    println("Load data")
-    statement.executeUpdate("copy into raw_source\n" +
-            "  from @~/testUploadStream\n" +
-            "  file_format = (type = json, strip_outer_array = true);")
-    println("Done loading data'\n")
+            // query the data
+            println("Query demo")
+            statement.executeQuery("select src:foo::string from raw_source").use { resultSet ->
+                println("Metadata:")
+                println("================================")
 
-    // query the data
-    println("Query demo")
-    val resultSet: ResultSet = statement.executeQuery("select src:foo::string from raw_source")
-    println("Metadata:")
-    println("================================")
+                // fetch metadata
+                val resultSetMetaData = resultSet.metaData
+                println("Number of columns=" + resultSetMetaData.columnCount)
+                for (colIdx in 0 until resultSetMetaData.columnCount) {
+                    println(
+                        "Column " + colIdx + ": type=" + resultSetMetaData.getColumnTypeName(colIdx + 1)
+                    )
+                }
 
-    // fetch metadata
-    val resultSetMetaData = resultSet.metaData
-    println("Number of columns=" + resultSetMetaData.columnCount)
-    for (colIdx in 0 until resultSetMetaData.columnCount) {
-        println(
-            "Column " + colIdx + ": type=" + resultSetMetaData.getColumnTypeName(colIdx + 1)
-        )
+                // fetch data
+                println("\nData:")
+                println("================================")
+                val rowIdx = 0
+                while (resultSet.next()) {
+                    println("row " + rowIdx + ", column 0: " + resultSet.getString(1))
+                }
+            }
+        }
     }
 
-    // fetch data
-    println("\nData:")
-    println("================================")
-    val rowIdx = 0
-    while (resultSet.next()) {
-        println("row " + rowIdx + ", column 0: " + resultSet.getString(1))
-    }
-    resultSet.close()
-    statement.close()
-    connection.close()
 }
 
 private fun getConnection(account: String, user: String, password: String): Connection {

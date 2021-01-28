@@ -13,6 +13,8 @@ java {
 }
 
 dependencies {
+	implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
+	implementation(group = "org.jetbrains.kotlin", name = "kotlin-stdlib-jdk8")
 	implementation(group = "net.snowflake", name = "snowflake-jdbc", version = "3.12.17")
 	implementation(group = "net.sourceforge.urin", name = "urin", version = "3.12")
 
