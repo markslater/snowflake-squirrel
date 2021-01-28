@@ -31,3 +31,6 @@
 .idea/modules/*.iml
 *.iml
 *.ipr
+
+# Build output
+/build
