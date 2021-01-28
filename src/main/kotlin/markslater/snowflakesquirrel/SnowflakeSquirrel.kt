@@ -70,11 +70,11 @@ private fun getConnection(account: String, user: String, password: String): Conn
     return DriverManager.getConnection(
         SnowflakeJdbcScheme.urin(authority(registeredName(account))).asString(),
         Properties().apply {
-            put("user", user) // replace "" with your user name
-            put("password", password) // replace "" with your password
-            put("warehouse", "") // replace "" with target warehouse name
-            put("db", "") // replace "" with target database name
-            put("schema", "") // replace "" with target schema name
+            put("user", user)
+            put("password", password)
+            put("warehouse", "MYWAREHOUSE")
+            put("db", "DEMO_DB")
+            put("schema", "PUBLIC")
         }
     )
 }
