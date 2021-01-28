@@ -2,13 +2,26 @@ package markslater.snowflakesquirrel
 
 import net.sourceforge.urin.Authority.authority
 import net.sourceforge.urin.Host.registeredName
+import java.io.File
+import java.nio.charset.StandardCharsets.UTF_8
 import java.sql.*
 import java.util.*
 
 fun main(args: Array<String>) {
+    val propertiesFileName = args[0]
+    println(propertiesFileName)
+    val properties = Properties().apply {
+        File(propertiesFileName).bufferedReader(UTF_8).use {
+            load(it)
+        }
+    }
+    val account = properties.getProperty("account") ?: error("Missing property \"account\"")
+    val user = properties.getProperty("user") ?: error("Missing property \"user\"")
+    val password = properties.getProperty("password") ?: error("Missing property \"password\"")
+
     // get connection
     println("Create JDBC connection")
-    val connection: Connection = getConnection()
+    val connection: Connection = getConnection(account, user, password)
     println("Done creating JDBC connection\n")
 
     // create statement
@@ -53,12 +66,12 @@ fun main(args: Array<String>) {
     connection.close()
 }
 
-private fun getConnection(): Connection {
+private fun getConnection(account: String, user: String, password: String): Connection {
     return DriverManager.getConnection(
-        SnowflakeJdbcScheme.urin(authority(registeredName("xy12345.eu-central-1.snowflakecomputing.com"))).asString(),
+        SnowflakeJdbcScheme.urin(authority(registeredName(account))).asString(),
         Properties().apply {
-            put("user", "") // replace "" with your user name
-            put("password", "") // replace "" with your password
+            put("user", user) // replace "" with your user name
+            put("password", password) // replace "" with your password
             put("warehouse", "") // replace "" with target warehouse name
             put("db", "") // replace "" with target database name
             put("schema", "") // replace "" with target schema name
