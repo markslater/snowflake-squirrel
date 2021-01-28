@@ -8,6 +8,7 @@ import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
+import java.net.http.HttpResponse.BodyHandlers
 import java.nio.charset.StandardCharsets.UTF_8
 import java.sql.DriverManager
 import java.util.*
@@ -35,7 +36,7 @@ fun main(args: Array<String>) {
     ).use { connection ->
         val httpResponse = HttpClient.newHttpClient().send(
             HttpRequest.newBuilder(URI("https://data.cityofnewyork.us/resource/vfnx-vebw.json")).GET().build(),
-            HttpResponse.BodyHandlers.ofInputStream()
+            BodyHandlers.ofInputStream()
         )
 
         connection
